@@ -1,0 +1,22 @@
+*.html
+
+# 忽略 Python 编译后的字节码文件
+__pycache__/
+*.pyc
+*.pyo
+
+# 如果使用虚拟环境，忽略虚拟环境目录
+venv/
+.env/
+
+# 忽略操作系统生成的文件
+.DS_Store
+Thumbs.db
+
+# 忽略日志文件和数据库文件
+*.log
+*.sqlite3
+
+# 忽略 IDE 生成的文件
+.idea/
+.vscode/
