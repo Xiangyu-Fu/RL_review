@@ -20,3 +20,6 @@ Thumbs.db
 # 忽略 IDE 生成的文件
 .idea/
 .vscode/
+
+
+wandb/

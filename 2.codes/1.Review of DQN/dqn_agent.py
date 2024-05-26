@@ -9,6 +9,7 @@ import torch.nn.functional as F
 import torch.optim as optim
 
 import gym
+import wandb
 
 BUFFER_SIZE = int(1e5)  # replay buffer size
 BATCH_SIZE = 64         # minibatch size
@@ -187,9 +188,19 @@ def dqn(n_episodes=2000, max_t=1000, eps_start=1.0, eps_end=0.01, eps_decay=0.99
         eps_end (float): minimum value of epsilon
         eps_decay (float): multiplicative factor (per episode) for decreasing epsilon
     """
+    wandb.init(project="dqn_lunar_lander", name="DQN_LunarLander")
+    config = wandb.config
+    config.n_episodes = n_episodes
+    config.max_t = max_t
+    config.eps_start = eps_start
+    config.eps_end = eps_end
+    config.eps_decay = eps_decay
+
     scores = []                        # list containing scores from each episode
     scores_window = deque(maxlen=100)  # last 100 scores
     eps = eps_start                    # initialize epsilon
+
+
     for i_episode in range(1, n_episodes+1):
         state = env.reset()
         state = state[0]
@@ -205,12 +216,17 @@ def dqn(n_episodes=2000, max_t=1000, eps_start=1.0, eps_end=0.01, eps_decay=0.99
         scores_window.append(score)       # save most recent score
         scores.append(score)              # save most recent score
         eps = max(eps_end, eps_decay*eps) # decrease epsilon
+        # Log the episode score to wandb
+        wandb.log({"episode": i_episode, "score": score, "average_score": np.mean(scores_window), "epsilon": eps})
+
         print('\rEpisode {}\tAverage Score: {:.2f}'.format(i_episode, np.mean(scores_window)), end="")
         if i_episode % 100 == 0:
             print('\rEpisode {}\tAverage Score: {:.2f}'.format(i_episode, np.mean(scores_window)))
         if np.mean(scores_window)>= 200.0:
             print('\nEnvironment solved in {:d} episodes!\tAverage Score: {:.2f}'.format(i_episode-100, np.mean(scores_window)))
             torch.save(agent.qnetwork_local.state_dict(), 'checkpoint.pth')
+            wandb.save('checkpoint.pth')
+
             break
     return scores
     
