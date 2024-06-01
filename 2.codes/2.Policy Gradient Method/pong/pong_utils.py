@@ -7,7 +7,8 @@ from JSAnimation.IPython_display import display_animation
 from matplotlib import animation
 from IPython.display import display
 import random as rand
-from IPython.display import HTML
+from IPython.display import HTML, display
+
 
 RIGHT=4
 LEFT=5
@@ -34,30 +35,26 @@ def preprocess_batch(images, bkg_color = np.array([144, 72, 17])):
     return torch.from_numpy(batch_input).float().to(device)
 
 
-# function to animate a list of frames
-# def animate_frames(frames):
-#     plt.axis('off')
-
-#     # color option for plotting
-#     # use Greys for greyscale
-#     cmap = None if len(frames[0].shape)==3 else 'Greys'
-#     patch = plt.imshow(frames[0], cmap=cmap)  
-
-#     fanim = animation.FuncAnimation(plt.gcf(), \
-#         lambda x: patch.set_data(frames[x]), frames = len(frames), interval=30)
-    
-#     display(display_animation(fanim, default_mode='once'))
 def animate_frames(frames):
-    fig, ax = plt.subplots()
-    patch = ax.imshow(frames[0], cmap='gray')
+    plt.axis('off')
 
-    def update(frame):
-        patch.set_data(frame)
-        return patch,
+    # color option for plotting
+    # use Greys for greyscale
+    cmap = None if len(frames[0].shape) == 3 else 'Greys'
+    patch = plt.imshow(frames[0], cmap=cmap)
 
-    ani = animation.FuncAnimation(fig, update, frames=frames, blit=True, interval=50)
-    plt.close(fig)
-    return HTML(ani.to_jshtml())
+    fanim = animation.FuncAnimation(plt.gcf(), 
+                                    lambda x: patch.set_data(frames[x]), 
+                                    frames=len(frames), interval=30)
+    
+    # Use matplotlib's built-in HTMLWriter
+    html_writer = animation.HTMLWriter()
+    fanim.save('animation.html', writer=html_writer)
+    
+    # Display the animation
+    with open('animation.html', 'r') as f:
+        html_content = f.read()
+    display(HTML(html_content))
     
 # play a game and display the animation
 # nrand = number of random steps before using the policy
@@ -69,8 +66,8 @@ def play(env, policy, time=2000, preprocess=None, nrand=5):
     
     # perform nrand random steps in the beginning
     for _ in range(nrand):
-        frame1, reward1, is_done, _, _ = env.step(np.random.choice([RIGHT,LEFT]))
-        frame2, reward2, is_done, _, _ = env.step(0)
+        frame1, reward1, is_done, _ = env.step(np.random.choice([RIGHT,LEFT]))
+        frame2, reward2, is_done, _ = env.step(0)
     
     anim_frames = []
     
@@ -81,8 +78,8 @@ def play(env, policy, time=2000, preprocess=None, nrand=5):
         
         # RIGHT = 4, LEFT = 5
         action = RIGHT if rand.random() < prob else LEFT
-        frame1, _, is_done, _, _ = env.step(action)
-        frame2, _, is_done, _, _ = env.step(0)
+        frame1, _, is_done, _ = env.step(action)
+        frame2, _, is_done, _ = env.step(0)
 
         if preprocess is None:
             anim_frames.append(frame1)
@@ -118,8 +115,8 @@ def collect_trajectories(envs, policy, tmax=200, nrand=5):
     
     # perform nrand random steps
     for _ in range(nrand):
-        fr1, re1, _, _, _ = envs.step(np.random.choice([RIGHT, LEFT],n))
-        fr2, re2, _, _, _ = envs.step([0]*n)
+        fr1, re1, _, _ = envs.step(np.random.choice([RIGHT, LEFT],n))
+        fr2, re2, _, _ = envs.step([0]*n)
     
     for t in range(tmax):
 

@@ -129,9 +129,9 @@ class parallelEnv(VecEnv):
 
         env_fns = [ gym.make(env_name) for _ in range(n) ]
 
-        # if seed is not None:
-        #     for i,e in enumerate(env_fns):
-        #         e.seed(i+seed)
+        if seed is not None:
+            for i,e in enumerate(env_fns):
+                e.seed(i+seed)
         
         """
         envs: list of gym environments to run in subprocesses
@@ -156,43 +156,18 @@ class parallelEnv(VecEnv):
     def step_async(self, actions):
         for remote, action in zip(self.remotes, actions):
             remote.send(('step', action))
-            # print(f"Sent action {action} to remote {remote}")
         self.waiting = True
 
     def step_wait(self):
-        print("Waiting for results")
-        for remote in self.remotes:
-            remote.recv()
-            print(f"Remote: {remote.recv()}")
-
         results = [remote.recv() for remote in self.remotes]
-        print(f"Results shape: {np.array(results).shape}")
         self.waiting = False
-        obs, rews, dones, _, infos = zip(*results)
+        obs, rews, dones, infos = zip(*results)
         return np.stack(obs), np.stack(rews), np.stack(dones), infos
 
     def reset(self):
         for remote in self.remotes:
             remote.send(('reset', None))
-        results = []
-        for remote in self.remotes:
-            result = remote.recv()
-            result = result[0]
-            results += [result]
-        # results = [remote.recv() for remote in self.remotes]
-        
-        # 打印每个环境的初始状态和形状
-        for i, result in enumerate(results):
-            # print(f"Environment {i} initial state: {result}")
-            print(f"Environment {i} initial state shape: {np.array(result).shape}")
-        
-        try:
-            return np.stack(results)
-        except ValueError as e:
-            print(f"Error in stacking results: {e}")
-            # 返回结果作为数组的列表以便进一步调试
-            return results
-    
+        return np.stack([remote.recv() for remote in self.remotes])
 
     def reset_task(self):
         for remote in self.remotes:
