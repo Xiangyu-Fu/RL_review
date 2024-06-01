@@ -14,6 +14,7 @@ RIGHT=4
 LEFT=5
 
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+print(device)
  
 # preprocess a single frame
 # crop image and downsample to 80x80
@@ -160,9 +161,10 @@ def collect_trajectories(envs, policy, tmax=200, nrand=5):
 
 # convert states to probability, passing through the policy
 def states_to_prob(policy, states):
-    states = torch.stack(states)
-    policy_input = states.view(-1,*states.shape[-3:])
-    return policy(policy_input).view(states.shape[:-3])
+    states = torch.stack(states)  # 将列表中的多个状态张量堆叠成一个张量
+    policy_input = states.view(-1, *states.shape[-3:])  # 重塑张量，使其适应policy的输入形状
+    return policy(policy_input).view(states.shape[:-3])  # 通过policy计算概率并恢复原始形状
+
 
 # return sum of log-prob divided by T
 # same thing as -policy_loss
