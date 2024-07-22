@@ -12,6 +12,7 @@ venv/
 # 忽略操作系统生成的文件
 .DS_Store
 Thumbs.db
+runs/
 
 # 忽略日志文件和数据库文件
 *.log
